@@ -1,0 +1,27 @@
+name: investor_app
+description: Investor Portal (Flutter Web, iOS, Android) for the RWA platform.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.1
+  http: ^1.1.0
+  go_router: ^14.2.0
+  shared_preferences: ^2.2.3
+  url_launcher: ^6.3.0
+  flutter_secure_storage: ^9.2.2
+  google_maps_flutter: ^2.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+

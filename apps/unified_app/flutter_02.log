@@ -1,0 +1,57 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter run
+
+## exception
+
+ExistingDartDevelopmentServiceException: DartDevelopmentServiceException: JSON-RPC error 100: Existing VM service clients prevent DDS from taking control.
+
+```
+```
+
+## flutter doctor
+
+```
+[32m[✓][39m Flutter (Channel master, 3.37.0-0.0.pre, on macOS 13.7.8 22H730 darwin-x64, locale en-NG) [41.0s]
+    [32m•[39m Flutter version 3.37.0-0.0.pre on channel master at /Users/mac/dev/env/flutter
+    [32m•[39m Upstream repository https://github.com/flutter/flutter.git
+    [32m•[39m Framework revision 7130981fe1 (4 weeks ago), 2025-08-22 20:18:43 +0800
+    [32m•[39m Engine revision 86281c3758
+    [32m•[39m Dart version 3.10.0 (build 3.10.0-127.0.dev)
+    [32m•[39m DevTools version 2.49.0
+    [32m•[39m Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets,
+      omit-legacy-version-file, enable-lldb-debugging
+
+[33m[!][39m Android toolchain - develop for Android devices (Android SDK version 34.0.0) [32.2s]
+    [32m•[39m Android SDK at /Users/mac/Library/Android/sdk
+    [32m•[39m Emulator version 36.1.9.0 (build_id 13823996) (CL:N/A)
+    [31m✗[39m Flutter requires Android SDK 36 and the Android BuildTools 28.0.3
+      To update the Android SDK visit https://flutter.dev/to/macos-android-setup for detailed instructions.
+    [33m![39m Some Android licenses not accepted. To resolve this, run: flutter doctor --android-licenses
+
+[33m[!][39m Xcode - develop for iOS and macOS (Xcode 14.2) [13.4s]
+    [32m•[39m Xcode at /Applications/Xcode.app/Contents/Developer
+    [32m•[39m Build 14C18
+    [33m![39m Flutter recommends a minimum Xcode version of 15.
+      Download the latest version or update via the Mac App Store.
+    [33m![39m CocoaPods 1.11.3 out of date (1.16.2 is recommended).
+        CocoaPods is a package manager for iOS or macOS platform code.
+        Without CocoaPods, plugins will not work on iOS or macOS.
+        For more info, see https://flutter.dev/to/platform-plugins
+      To update CocoaPods, see https://guides.cocoapods.org/using/getting-started.html#updating-cocoapods
+
+[32m[✓][39m Chrome - develop for the web [24ms]
+    [32m•[39m Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
+[32m[✓][39m Connected device (2 available) [16.6s]
+    [32m•[39m macOS (desktop) • macos  • darwin-x64     • macOS 13.7.8 22H730 darwin-x64
+    [32m•[39m Chrome (web)    • chrome • web-javascript • Google Chrome 140.0.7339.133
+
+[32m[✓][39m Network resources [2.7s]
+    [32m•[39m All expected network resources are available.
+
+[33m![39m Doctor found issues in 2 categories.
+```
