@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: Marketplace API
+  version: 0.1.0
+  description: Order book and matching for secondary trading.
+servers:
+  - url: https://api.example.com
+paths:
+  /orderbook/{assetId}:
+    get:
+      summary: Get orderbook for asset
+      parameters:
+        - in: path
+          name: assetId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Orderbook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Orderbook'
+  /orders:
+    post:
+      summary: Post an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Created
+    get:
+      summary: List my orders
+      responses:
+        '200':
+          description: Orders
+  /orders/{id}:
+    delete:
+      summary: Cancel order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cancelled
+components:
+  schemas:
+    OrderRequest:
+      type: object
+      required: [asset_id, side, qty]
+      properties:
+        asset_id: { type: string }
+        side: { type: string, enum: [buy, sell] }
+        qty: { type: string }
+        price: { type: string }
+    Orderbook:
+      type: object
+      properties:
+        bids:
+          type: array
+          items:
+            $ref: '#/components/schemas/Level'
+        asks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Level'
+    Level:
+      type: object
+      properties:
+        price: { type: string }
+        qty: { type: string }
+
+

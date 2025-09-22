@@ -1,0 +1,48 @@
+{
+  "name": "rwa-validator-node",
+  "version": "1.0.0",
+  "description": "RWA Platform Validator Node",
+  "main": "src/validator-node.js",
+  "scripts": {
+    "start": "node src/validator-node.js",
+    "dev": "nodemon src/validator-node.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@libp2p/tcp": "^9.0.0",
+    "@libp2p/websockets": "^8.0.0",
+    "@libp2p/noise": "^15.0.0",
+    "@libp2p/mplex": "^10.0.0",
+    "@libp2p/bootstrap": "^10.0.0",
+    "@libp2p/kad-dht": "^12.0.0",
+    "@libp2p/pubsub": "^9.0.0",
+    "@libp2p/gossipsub": "^13.0.0",
+    "libp2p": "^1.0.0",
+    "ipfs-core": "^0.18.0",
+    "multiformats": "^13.0.0",
+    "uint8arrays": "^5.0.0",
+    "web3": "^4.0.0",
+    "ethers": "^6.0.0",
+    "crypto": "^1.0.1",
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "winston": "^3.10.0",
+    "prometheus-client": "^15.0.0",
+    "node-cron": "^3.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0",
+    "jest": "^29.0.0",
+    "supertest": "^6.3.0"
+  },
+  "keywords": [
+    "rwa",
+    "p2p",
+    "blockchain",
+    "validator",
+    "consensus"
+  ],
+  "author": "RWA Platform Team",
+  "license": "MIT"
+}

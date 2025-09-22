@@ -1,0 +1,185 @@
+openapi: 3.0.3
+info:
+  title: Verification Agents API
+  version: 0.1.0
+  description: Agent applications, search, jobs, reports, and reviews.
+servers:
+  - url: https://api.example.com
+paths:
+  /agents/apply:
+    post:
+      summary: Apply to become an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentApplication'
+      responses:
+        '202':
+          description: Submitted
+  /agents/search:
+    get:
+      summary: Search agents by region/skill/rating
+      parameters:
+        - in: query
+          name: region
+          schema:
+            type: string
+        - in: query
+          name: rating_gte
+          schema:
+            type: number
+        - in: query
+          name: skill
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent list
+  /admin/agents/{id}:
+    patch:
+      summary: Approve/suspend agent (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentStatusUpdate'
+      responses:
+        '200':
+          description: Updated
+  /verification/jobs:
+    post:
+      summary: Create a verification job (escrow fee)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreate'
+      responses:
+        '201':
+          description: Created
+  /verification/jobs/{id}:
+    get:
+      summary: Get job
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job
+    patch:
+      summary: Assign or update job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobUpdate'
+      responses:
+        '200':
+          description: Updated
+  /verification/jobs/{id}/report:
+    post:
+      summary: Submit verification report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportSubmit'
+      responses:
+        '201':
+          description: Submitted
+  /verification/jobs/{id}/accept:
+    post:
+      summary: Investor accepts report (release escrow)
+      responses:
+        '200':
+          description: Accepted
+  /verification/jobs/{id}/reject:
+    post:
+      summary: Investor rejects report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Rejected
+  /agents/{id}/reviews:
+    post:
+      summary: Rate and review an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentReview'
+      responses:
+        '201':
+          description: Created
+components:
+  schemas:
+    AgentApplication:
+      type: object
+      properties:
+        regions:
+          type: array
+          items: { type: string }
+        skills:
+          type: array
+          items: { type: string }
+        bio:
+          type: string
+    AgentStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, suspended]
+    JobCreate:
+      type: object
+      required: [asset_id, price, currency]
+      properties:
+        asset_id: { type: string }
+        price: { type: number }
+        currency: { type: string }
+        agent_id: { type: string }
+    JobUpdate:
+      type: object
+      properties:
+        agent_id: { type: string }
+        status: { type: string, enum: [assigned, submitted, accepted, rejected, disputed] }
+    ReportSubmit:
+      type: object
+      properties:
+        summary: { type: string }
+        checklist: { type: object }
+        photos: { type: array, items: { type: string } }
+        videos: { type: array, items: { type: string } }
+        gps_path: { type: array, items: { type: number }, description: 'encoded polyline or list [lat,lon,...]' }
+        doc_hashes: { type: array, items: { type: string } }
+    AgentReview:
+      type: object
+      required: [score]
+      properties:
+        score: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+

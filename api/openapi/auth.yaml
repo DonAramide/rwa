@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: Auth & KYC API
+  version: 0.1.0
+  description: Authentication, sessions, and KYC orchestration endpoints.
+servers:
+  - url: https://api.example.com
+paths:
+  /auth/signup:
+    post:
+      summary: Create a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /auth/login:
+    post:
+      summary: Login with email/password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Session tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /auth/2fa/verify:
+    post:
+      summary: Verify 2FA code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TwoFaVerifyRequest'
+      responses:
+        '200':
+          description: 2FA verified
+  /kyc/submit:
+    post:
+      summary: Submit KYC data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycSubmission'
+      responses:
+        '202':
+          description: KYC submitted
+  /kyc/status:
+    get:
+      summary: Get KYC status
+      responses:
+        '200':
+          description: Current KYC status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycStatus'
+components:
+  schemas:
+    SignupRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        phone:
+          type: string
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    TwoFaVerifyRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+    KycSubmission:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum: [smile, dojah, prembley, other]
+        id_documents:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              number:
+                type: string
+        liveness_token:
+          type: string
+    KycStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, submitted, approved, rejected]
+        updated_at:
+          type: string
+          format: date-time
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+
+

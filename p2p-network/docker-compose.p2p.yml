@@ -1,0 +1,286 @@
+version: '3.8'
+
+services:
+  # Bootstrap Node - Network Entry Point
+  bootstrap-node:
+    build:
+      context: ./nodes/bootstrap
+      dockerfile: Dockerfile
+    container_name: rwa-bootstrap
+    environment:
+      NODE_TYPE: bootstrap
+      NETWORK_ID: rwa-mainnet
+      BOOTSTRAP_PEERS: ""
+    ports:
+      - "4001:4001"   # libp2p swarm
+      - "5001:5001"   # HTTP API
+    volumes:
+      - bootstrap_data:/data
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  # Validator Nodes - Consensus and Verification
+  validator-node-1:
+    build:
+      context: ./nodes/validator
+      dockerfile: Dockerfile
+    container_name: rwa-validator-1
+    environment:
+      NODE_TYPE: validator
+      VALIDATOR_ID: validator-1
+      STAKE_AMOUNT: 1000
+      BOOTSTRAP_PEERS: /ip4/bootstrap-node/tcp/4001/p2p/QmBootstrap
+      PRIVATE_KEY_FILE: /secrets/validator-1.key
+    ports:
+      - "4002:4001"
+      - "5002:5001"
+      - "8002:8080"   # Metrics
+    volumes:
+      - validator1_data:/data
+      - ./secrets:/secrets:ro
+    depends_on:
+      - bootstrap-node
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  validator-node-2:
+    build:
+      context: ./nodes/validator
+      dockerfile: Dockerfile
+    container_name: rwa-validator-2
+    environment:
+      NODE_TYPE: validator
+      VALIDATOR_ID: validator-2
+      STAKE_AMOUNT: 1000
+      BOOTSTRAP_PEERS: /ip4/bootstrap-node/tcp/4001/p2p/QmBootstrap
+      PRIVATE_KEY_FILE: /secrets/validator-2.key
+    ports:
+      - "4003:4001"
+      - "5003:5001"
+      - "8003:8080"
+    volumes:
+      - validator2_data:/data
+      - ./secrets:/secrets:ro
+    depends_on:
+      - bootstrap-node
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  validator-node-3:
+    build:
+      context: ./nodes/validator
+      dockerfile: Dockerfile
+    container_name: rwa-validator-3
+    environment:
+      NODE_TYPE: validator
+      VALIDATOR_ID: validator-3
+      STAKE_AMOUNT: 1000
+      BOOTSTRAP_PEERS: /ip4/bootstrap-node/tcp/4001/p2p/QmBootstrap
+      PRIVATE_KEY_FILE: /secrets/validator-3.key
+    ports:
+      - "4004:4001"
+      - "5004:5001"
+      - "8004:8080"
+    volumes:
+      - validator3_data:/data
+      - ./secrets:/secrets:ro
+    depends_on:
+      - bootstrap-node
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  # IPFS Storage Nodes
+  ipfs-node-1:
+    image: ipfs/go-ipfs:latest
+    container_name: rwa-ipfs-1
+    environment:
+      IPFS_SWARM_KEY_FILE: /data/ipfs/swarm.key
+      IPFS_BOOTSTRAP_ADD_DEFAULT: "false"
+    ports:
+      - "4101:4001"   # Swarm
+      - "5101:5001"   # API
+      - "8101:8080"   # Gateway
+    volumes:
+      - ipfs1_data:/data/ipfs
+      - ./config/ipfs-config.json:/data/ipfs/config:ro
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  ipfs-node-2:
+    image: ipfs/go-ipfs:latest
+    container_name: rwa-ipfs-2
+    environment:
+      IPFS_SWARM_KEY_FILE: /data/ipfs/swarm.key
+      IPFS_BOOTSTRAP_ADD_DEFAULT: "false"
+    ports:
+      - "4102:4001"
+      - "5102:5001"
+      - "8102:8080"
+    volumes:
+      - ipfs2_data:/data/ipfs
+      - ./config/ipfs-config.json:/data/ipfs/config:ro
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  # Oracle Nodes - IoT Data Aggregation
+  oracle-node-1:
+    build:
+      context: ./nodes/oracle
+      dockerfile: Dockerfile
+    container_name: rwa-oracle-1
+    environment:
+      NODE_TYPE: oracle
+      ORACLE_ID: oracle-1
+      DATA_SOURCES: "gps,weather,traffic"
+      AGGREGATION_INTERVAL: "300"  # 5 minutes
+      STAKE_AMOUNT: 500
+    ports:
+      - "4201:4001"
+      - "5201:5001"
+      - "8201:8080"
+    volumes:
+      - oracle1_data:/data
+      - ./config/oracle-sources.yml:/config/sources.yml:ro
+    depends_on:
+      - bootstrap-node
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  oracle-node-2:
+    build:
+      context: ./nodes/oracle
+      dockerfile: Dockerfile
+    container_name: rwa-oracle-2
+    environment:
+      NODE_TYPE: oracle
+      ORACLE_ID: oracle-2
+      DATA_SOURCES: "iot,satellite,sensors"
+      AGGREGATION_INTERVAL: "300"
+      STAKE_AMOUNT: 500
+    ports:
+      - "4202:4001"
+      - "5202:5001"
+      - "8202:8080"
+    volumes:
+      - oracle2_data:/data
+      - ./config/oracle-sources.yml:/config/sources.yml:ro
+    depends_on:
+      - bootstrap-node
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  # Relay Nodes - Mobile Agent Connectivity
+  relay-node-1:
+    build:
+      context: ./nodes/relay
+      dockerfile: Dockerfile
+    container_name: rwa-relay-1
+    environment:
+      NODE_TYPE: relay
+      RELAY_ID: relay-1
+      REGION: "north-america"
+      MOBILE_SUPPORT: "true"
+      STAKE_AMOUNT: 100
+    ports:
+      - "4301:4001"
+      - "5301:5001"
+      - "9001:9001"   # WebRTC signaling
+    volumes:
+      - relay1_data:/data
+    depends_on:
+      - bootstrap-node
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  relay-node-2:
+    build:
+      context: ./nodes/relay
+      dockerfile: Dockerfile
+    container_name: rwa-relay-2
+    environment:
+      NODE_TYPE: relay
+      RELAY_ID: relay-2
+      REGION: "europe"
+      MOBILE_SUPPORT: "true"
+      STAKE_AMOUNT: 100
+    ports:
+      - "4302:4001"
+      - "5302:5001"
+      - "9002:9001"
+    volumes:
+      - relay2_data:/data
+    depends_on:
+      - bootstrap-node
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  # Network Monitor & Analytics
+  network-monitor:
+    build:
+      context: ./nodes/monitor
+      dockerfile: Dockerfile
+    container_name: rwa-monitor
+    environment:
+      MONITOR_TARGETS: "bootstrap-node,validator-node-1,validator-node-2,validator-node-3"
+      METRICS_INTERVAL: "30"
+      DASHBOARD_PORT: "3000"
+    ports:
+      - "3001:3000"   # Dashboard
+      - "9090:9090"   # Prometheus
+    volumes:
+      - monitor_data:/data
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - bootstrap-node
+      - validator-node-1
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+  # Network Health Check
+  healthcheck:
+    build:
+      context: ./nodes/healthcheck
+      dockerfile: Dockerfile
+    container_name: rwa-healthcheck
+    environment:
+      CHECK_INTERVAL: "60"
+      ALERT_WEBHOOK: "${ALERT_WEBHOOK_URL}"
+      CONSENSUS_THRESHOLD: "0.66"
+    volumes:
+      - ./config/health-checks.yml:/config/checks.yml:ro
+    depends_on:
+      - bootstrap-node
+    networks:
+      - p2p-network
+    restart: unless-stopped
+
+volumes:
+  bootstrap_data:
+  validator1_data:
+  validator2_data:
+  validator3_data:
+  ipfs1_data:
+  ipfs2_data:
+  oracle1_data:
+  oracle2_data:
+  relay1_data:
+  relay2_data:
+  monitor_data:
+
+networks:
+  p2p-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

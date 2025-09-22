@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: IoT Ingestion API
+  version: 0.1.0
+  description: Signed telemetry ingestion and queries.
+servers:
+  - url: https://api.example.com
+paths:
+  /iot/telemetry:
+    post:
+      summary: Ingest telemetry (signed)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Telemetry'
+      responses:
+        '202':
+          description: Accepted
+  /assets/{id}/telemetry:
+    get:
+      summary: Get recent telemetry for asset
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Telemetry list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Telemetry'
+components:
+  schemas:
+    Telemetry:
+      type: object
+      properties:
+        asset_id: { type: string }
+        ts: { type: string, format: date-time }
+        lat: { type: number }
+        lon: { type: number }
+        speed: { type: number }
+        meta: { type: object }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

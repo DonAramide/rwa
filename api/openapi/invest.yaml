@@ -1,0 +1,107 @@
+openapi: 3.0.3
+info:
+  title: Investment & Wallet API
+  version: 0.1.0
+  description: Purchase/redeem tokens, balances, payments.
+servers:
+  - url: https://api.example.com
+paths:
+  /wallet/link:
+    post:
+      summary: Link a wallet address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletLinkRequest'
+      responses:
+        '200':
+          description: Linked
+  /wallet/balances:
+    get:
+      summary: Get user balances
+      responses:
+        '200':
+          description: Balances
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balances'
+  /invest/orders:
+    post:
+      summary: Place buy/sell order (primary/secondary)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Order placed
+    get:
+      summary: List user orders
+      responses:
+        '200':
+          description: Orders
+  /invest/holdings:
+    get:
+      summary: Get user holdings
+      responses:
+        '200':
+          description: Holdings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Holdings'
+components:
+  schemas:
+    WalletLinkRequest:
+      type: object
+      required: [address, chain_id]
+      properties:
+        address:
+          type: string
+        chain_id:
+          type: integer
+    OrderRequest:
+      type: object
+      required: [asset_id, side, qty]
+      properties:
+        asset_id:
+          type: string
+        side:
+          type: string
+          enum: [buy, sell]
+        qty:
+          type: string
+        price:
+          type: string
+        verification_confirmation_id:
+          type: string
+        payment_method:
+          type: string
+          enum: [fiat, stable]
+    Balances:
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            type: object
+            properties:
+              asset_id: { type: string }
+              balance: { type: string }
+    Holdings:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              asset_id: { type: string }
+              balance: { type: string }
+
+

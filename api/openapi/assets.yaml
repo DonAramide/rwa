@@ -1,0 +1,118 @@
+openapi: 3.0.3
+info:
+  title: Asset Management API
+  version: 0.1.0
+  description: Asset onboarding, verification, documents, and public listings.
+servers:
+  - url: https://api.example.com
+paths:
+  /assets:
+    get:
+      summary: List public assets
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Asset list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Asset'
+  /assets/{id}:
+    get:
+      summary: Get asset details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Asset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+  /admin/assets:
+    post:
+      summary: Create asset (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetCreate'
+      responses:
+        '201':
+          description: Created
+  /admin/assets/{id}/verify:
+    post:
+      summary: Verify asset (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verified
+components:
+  schemas:
+    Asset:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [land, truck, hotel, house, other]
+        title:
+          type: string
+        coords:
+          type: object
+          properties:
+            lat: { type: number }
+            lon: { type: number }
+        status:
+          type: string
+        nav:
+          type: number
+        documents:
+          type: array
+          items:
+            type: string
+        verification_required:
+          type: boolean
+        last_verified_at:
+          type: string
+          format: date-time
+    AssetCreate:
+      type: object
+      required: [type, title]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        coords:
+          type: object
+          properties:
+            lat: { type: number }
+            lon: { type: number }
+        documents:
+          type: array
+          items:
+            type: string
+
+

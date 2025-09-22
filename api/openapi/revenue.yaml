@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: Revenue & Distribution API
+  version: 0.1.0
+  description: Earnings ingestion and payout orchestration.
+servers:
+  - url: https://api.example.com
+paths:
+  /distributions/{assetId}:
+    get:
+      summary: List distributions for asset
+      parameters:
+        - in: path
+          name: assetId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Distributions
+  /admin/distributions/trigger:
+    post:
+      summary: Trigger a payout batch (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerRequest'
+      responses:
+        '202':
+          description: Batch queued
+components:
+  schemas:
+    TriggerRequest:
+      type: object
+      required: [asset_id, period, gross]
+      properties:
+        asset_id: { type: string }
+        period: { type: string, description: 'ISO8601 period, e.g., 2024-01/2024-03' }
+        gross: { type: number }
+        mgmt_fee_bps: { type: integer }
+        carry_bps: { type: integer }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
