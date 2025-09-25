@@ -41,10 +41,12 @@ class _AdminPanelState extends ConsumerState<AdminPanel>
 
   Future<void> _loadDashboardData() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+      }
 
       final results = await Future.wait([
         AdminService.getDashboardStats(),
@@ -53,19 +55,23 @@ class _AdminPanelState extends ConsumerState<AdminPanel>
         _loadComprehensiveAssets(),
       ]);
 
-      setState(() {
-        _stats = results[0] as AdminStats;
-        _users = results[1] as List<AdminUser>;
-        _filteredUsers = _users;
-        _activities = results[2] as List<AdminActivity>;
-        _assets = results[3] as List<Asset>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _stats = results[0] as AdminStats;
+          _users = results[1] as List<AdminUser>;
+          _filteredUsers = _users;
+          _activities = results[2] as List<AdminActivity>;
+          _assets = results[3] as List<Asset>;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -77,13 +83,18 @@ class _AdminPanelState extends ConsumerState<AdminPanel>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.getBackground(isDark),
       appBar: AppBar(
-        title: const Text('Admin Dashboard', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.black,
+        title: Text(
+          'Admin Dashboard',
+          style: TextStyle(color: AppColors.getTextPrimary(isDark))
+        ),
+        backgroundColor: AppColors.getSurface(isDark),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: AppColors.getTextPrimary(isDark)),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 16.0),
@@ -93,9 +104,9 @@ class _AdminPanelState extends ConsumerState<AdminPanel>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.grey[400],
-          indicatorColor: Colors.white,
+          labelColor: AppColors.getTextPrimary(isDark),
+          unselectedLabelColor: AppColors.getTextSecondary(isDark),
+          indicatorColor: AppColors.primary,
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
             Tab(icon: Icon(Icons.people), text: 'Users'),
@@ -546,12 +557,10 @@ class _AdminPanelState extends ConsumerState<AdminPanel>
             style: AppTextStyles.heading4.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 16,
-            runSpacing: 12,
+          Row(
             children: [
-              SizedBox(
-                width: 200,
+              Expanded(
+                flex: 2,
                 child: DropdownButtonFormField<AssetCategory?>(
                   decoration: const InputDecoration(
                     labelText: 'Category',
@@ -567,7 +576,12 @@ class _AdminPanelState extends ConsumerState<AdminPanel>
                           children: [
                             Icon(category.icon, color: category.color, size: 16),
                             const SizedBox(width: 8),
-                            Text(category.displayName),
+                            Expanded(
+                              child: Text(
+                                category.displayName,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -581,8 +595,8 @@ class _AdminPanelState extends ConsumerState<AdminPanel>
                   },
                 ),
               ),
-              SizedBox(
-                width: 150,
+              const SizedBox(width: 16),
+              Expanded(
                 child: DropdownButtonFormField<String>(
                   decoration: const InputDecoration(
                     labelText: 'Status',
@@ -599,8 +613,8 @@ class _AdminPanelState extends ConsumerState<AdminPanel>
                   },
                 ),
               ),
-              SizedBox(
-                width: 150,
+              const SizedBox(width: 16),
+              Expanded(
                 child: DropdownButtonFormField<bool>(
                   decoration: const InputDecoration(
                     labelText: 'Verification',

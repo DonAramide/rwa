@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/portfolio_provider.dart';
 
 class PortfolioScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,13 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       appBar: AppBar(
         title: const Text('Portfolio'),
         actions: [
+          IconButton(
+            onPressed: () {
+              context.push('/investment-history');
+            },
+            icon: const Icon(Icons.history),
+            tooltip: 'Investment History',
+          ),
           IconButton(
             onPressed: () {
               ref.read(portfolioProvider.notifier).refreshPortfolio();

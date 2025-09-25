@@ -3,6 +3,10 @@ enum UserRole {
   professionalAgent,
   verifier,
   admin,
+  superAdmin,
+  merchantWhiteLabel,
+  merchantAdmin,
+  merchantOperations,
 }
 
 extension UserRoleExtension on UserRole {
@@ -16,6 +20,14 @@ extension UserRoleExtension on UserRole {
         return 'Verifier';
       case UserRole.admin:
         return 'Admin';
+      case UserRole.superAdmin:
+        return 'Super Admin';
+      case UserRole.merchantWhiteLabel:
+        return 'Merchant Partner';
+      case UserRole.merchantAdmin:
+        return 'Merchant Admin';
+      case UserRole.merchantOperations:
+        return 'Merchant Operations';
     }
   }
 
@@ -29,6 +41,14 @@ extension UserRoleExtension on UserRole {
         return 'On-demand site visits and verification tasks';
       case UserRole.admin:
         return 'Platform oversight and compliance management';
+      case UserRole.superAdmin:
+        return 'Full platform administration and white-label management';
+      case UserRole.merchantWhiteLabel:
+        return 'White-label merchant partner with custom branding';
+      case UserRole.merchantAdmin:
+        return 'Merchant administration and customer management';
+      case UserRole.merchantOperations:
+        return 'Merchant operations and transaction processing';
     }
   }
 }

@@ -538,6 +538,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               '⚖️ Admin',
               'Platform Management',
             ),
+            _buildRoleOption(
+              UserRole.superAdmin,
+              '👑 Super Admin',
+              'System Control',
+            ),
+            _buildRoleOption(
+              UserRole.merchantWhiteLabel,
+              '🏦 Bank Partner',
+              'Banking Services',
+            ),
           ],
         ),
         
@@ -587,6 +597,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   _buildDemoCredentialButton('admin@example.com', 'password123', UserRole.admin),
                   _buildDemoCredentialButton('agent@example.com', 'password123', UserRole.professionalAgent),
                   _buildDemoCredentialButton('verifier@example.com', 'password123', UserRole.verifier),
+                  _buildDemoCredentialButton('superadmin@example.com', 'password123', UserRole.superAdmin),
+                  _buildDemoCredentialButton('merchant@example.com', 'password123', UserRole.merchantWhiteLabel),
+                  _buildDemoCredentialButton('merchantadmin@example.com', 'password123', UserRole.merchantAdmin),
+                  _buildDemoCredentialButton('merchantops@example.com', 'password123', UserRole.merchantOperations),
                 ],
               ),
             ],
@@ -681,6 +695,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         break;
       case UserRole.verifier:
         roleLabel = 'Verifier';
+        break;
+      case UserRole.superAdmin:
+        roleLabel = 'Super Admin';
+        break;
+      case UserRole.merchantWhiteLabel:
+        roleLabel = 'Bank Partner';
+        break;
+      case UserRole.merchantAdmin:
+        roleLabel = 'Bank Admin';
+        break;
+      case UserRole.merchantOperations:
+        roleLabel = 'Bank Operations';
         break;
     }
 
@@ -955,8 +981,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       if (mounted) {
-        // Navigate based on successful login
-        context.go('/dashboard');
+        // Navigate based on user role
+        switch (selectedLoginRole!) {
+          case UserRole.superAdmin:
+            context.go('/super-admin');
+            break;
+          case UserRole.admin:
+            context.go('/admin');
+            break;
+          default:
+            context.go('/dashboard');
+            break;
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -9,12 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:investor_app/main.dart';
+import 'package:unified_app/main.dart';
 
 void main() {
   testWidgets('App loads correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const ProviderScope(child: InvestorApp()));
+    await tester.pumpWidget(const ProviderScope(child: UnifiedRWAApp()));
 
     // Verify that the welcome text is shown
     expect(find.text('Welcome to RWA Investment Platform'), findsOneWidget);

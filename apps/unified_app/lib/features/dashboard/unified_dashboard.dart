@@ -5,10 +5,12 @@ import '../../models/user_role.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/theme_service.dart';
 import 'components/investor_agent_dashboard.dart';
 import 'components/professional_agent_dashboard.dart';
 import 'components/verifier_dashboard.dart';
-import 'components/admin_dashboard.dart';
+import 'components/admin_dashboard_clean.dart';
+import '../merchant_admin/merchant_admin_dashboard.dart';
 
 class UnifiedDashboard extends ConsumerStatefulWidget {
   const UnifiedDashboard({super.key});
@@ -23,10 +25,12 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    
+
     if (!authState.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/login');
+      Future.microtask(() {
+        if (mounted) {
+          context.go('/login');
+        }
       });
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -35,8 +39,10 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
 
     final userRole = authState.userRole;
     if (userRole == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/role-selection');
+      Future.microtask(() {
+        if (mounted) {
+          context.go('/role-selection');
+        }
       });
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -183,7 +189,15 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
       case UserRole.verifier:
         return const VerifierDashboard();
       case UserRole.admin:
-        return const AdminDashboard();
+        return const AdminDashboardClean();
+      case UserRole.superAdmin:
+        return const AdminDashboardClean(); // Super admin uses admin dashboard with elevated permissions
+      case UserRole.merchantWhiteLabel:
+        return const AdminDashboardClean(); // Merchant partners use admin-style dashboard with custom branding
+      case UserRole.merchantAdmin:
+        return const MerchantAdminDashboard();
+      case UserRole.merchantOperations:
+        return const MerchantAdminDashboard();
     }
   }
 
@@ -214,25 +228,49 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
         return FloatingActionButton(
           onPressed: () => context.push('/marketplace'),
           backgroundColor: AppColors.primary,
-          child: const Icon(Icons.add, color: Colors.white),
+          child: const Icon(Icons.add, color: AppColors.textOnPrimary),
         );
       case UserRole.professionalAgent:
         return FloatingActionButton(
           onPressed: () => _showNewProjectAssignment(),
           backgroundColor: AppColors.warning,
-          child: const Icon(Icons.assignment, color: Colors.white),
+          child: const Icon(Icons.assignment, color: AppColors.textOnPrimary),
         );
       case UserRole.verifier:
         return FloatingActionButton(
           onPressed: () => _showAvailableTasks(),
           backgroundColor: AppColors.info,
-          child: const Icon(Icons.camera_alt, color: Colors.white),
+          child: const Icon(Icons.camera_alt, color: AppColors.textOnPrimary),
         );
       case UserRole.admin:
         return FloatingActionButton(
           onPressed: () => _showAdminActions(),
           backgroundColor: AppColors.error,
-          child: const Icon(Icons.admin_panel_settings, color: Colors.white),
+          child: const Icon(Icons.admin_panel_settings, color: AppColors.textOnPrimary),
+        );
+      case UserRole.superAdmin:
+        return FloatingActionButton(
+          onPressed: () => _showSuperAdminActions(),
+          backgroundColor: AppColors.error,
+          child: const Icon(Icons.shield, color: AppColors.textOnPrimary),
+        );
+      case UserRole.merchantWhiteLabel:
+        return FloatingActionButton(
+          onPressed: () => _showPartnerActions(),
+          backgroundColor: AppColors.primary,
+          child: const Icon(Icons.account_balance, color: AppColors.textOnPrimary),
+        );
+      case UserRole.merchantAdmin:
+        return FloatingActionButton(
+          onPressed: () => _showBankAdminActions(),
+          backgroundColor: Colors.blue,
+          child: const Icon(Icons.add_business, color: AppColors.textOnPrimary),
+        );
+      case UserRole.merchantOperations:
+        return FloatingActionButton(
+          onPressed: () => _showBankOperationsActions(),
+          backgroundColor: Colors.teal,
+          child: const Icon(Icons.payment, color: AppColors.textOnPrimary),
         );
     }
   }
@@ -244,7 +282,7 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
           NavItem(Icons.dashboard, 'Dashboard'),
           NavItem(Icons.store, 'Marketplace'),
           NavItem(Icons.account_balance_wallet, 'Portfolio'),
-          NavItem(Icons.flag, 'Monitoring'),
+          NavItem(Icons.bookmark, 'Watchlist'),
           NavItem(Icons.how_to_vote, 'Governance'),
         ];
       case UserRole.professionalAgent:
@@ -270,6 +308,38 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
           NavItem(Icons.people, 'Users'),
           NavItem(Icons.security, 'Compliance'),
           NavItem(Icons.analytics, 'Analytics'),
+        ];
+      case UserRole.superAdmin:
+        return [
+          NavItem(Icons.dashboard, 'Dashboard'),
+          NavItem(Icons.shield, 'Platform'),
+          NavItem(Icons.business, 'Partners'),
+          NavItem(Icons.settings, 'System'),
+          NavItem(Icons.analytics, 'Analytics'),
+        ];
+      case UserRole.merchantWhiteLabel:
+        return [
+          NavItem(Icons.dashboard, 'Dashboard'),
+          NavItem(Icons.people, 'Clients'),
+          NavItem(Icons.account_balance, 'Banking'),
+          NavItem(Icons.analytics, 'Reports'),
+          NavItem(Icons.settings, 'Config'),
+        ];
+      case UserRole.merchantAdmin:
+        return [
+          NavItem(Icons.dashboard, 'Overview'),
+          NavItem(Icons.people, 'Customers'),
+          NavItem(Icons.receipt_long, 'Transactions'),
+          NavItem(Icons.assessment, 'Proposals'),
+          NavItem(Icons.analytics, 'Analytics'),
+        ];
+      case UserRole.merchantOperations:
+        return [
+          NavItem(Icons.dashboard, 'Overview'),
+          NavItem(Icons.payment, 'Settlements'),
+          NavItem(Icons.receipt_long, 'Transactions'),
+          NavItem(Icons.people, 'Customers'),
+          NavItem(Icons.settings, 'Settings'),
         ];
     }
   }
@@ -304,6 +374,34 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
           icon: Icons.admin_panel_settings,
           color: AppColors.error,
         );
+      case UserRole.superAdmin:
+        return RoleInfo(
+          role: role,
+          title: 'Super Admin',
+          icon: Icons.shield,
+          color: AppColors.error,
+        );
+      case UserRole.merchantWhiteLabel:
+        return RoleInfo(
+          role: role,
+          title: 'Bank Partner',
+          icon: Icons.account_balance,
+          color: AppColors.primary,
+        );
+      case UserRole.merchantAdmin:
+        return RoleInfo(
+          role: role,
+          title: 'Bank Admin',
+          icon: Icons.admin_panel_settings,
+          color: Colors.blue,
+        );
+      case UserRole.merchantOperations:
+        return RoleInfo(
+          role: role,
+          title: 'Bank Operations',
+          icon: Icons.business_center,
+          color: Colors.teal,
+        );
     }
   }
 
@@ -314,7 +412,7 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
           case 0: break; // Dashboard - already here
           case 1: context.push('/marketplace'); break;
           case 2: context.push('/portfolio'); break;
-          case 3: context.push('/rofr'); break;
+          case 3: context.push('/watchlist'); break;
           case 4: _showGovernance(); break;
         }
         break;
@@ -344,6 +442,30 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
           case 3: _showCompliance(); break;
           case 4: _showAnalytics(); break;
         }
+        break;
+      case UserRole.superAdmin:
+        switch (index) {
+          case 0: break; // Dashboard
+          case 1: _showPlatformManagement(); break;
+          case 2: _showPartnerManagement(); break;
+          case 3: _showSystemSettings(); break;
+          case 4: _showAnalytics(); break;
+        }
+        break;
+      case UserRole.merchantWhiteLabel:
+        switch (index) {
+          case 0: break; // Dashboard
+          case 1: _showClientManagement(); break;
+          case 2: _showBankingInterface(); break;
+          case 3: _showReports(); break;
+          case 4: _showConfiguration(); break;
+        }
+        break;
+      case UserRole.merchantAdmin:
+        // Bank admin navigation is handled by the dashboard's internal tab controller
+        break;
+      case UserRole.merchantOperations:
+        // Bank operations navigation is handled by the dashboard's internal tab controller
         break;
     }
   }
@@ -447,6 +569,66 @@ class _UnifiedDashboardState extends ConsumerState<UnifiedDashboard> {
   void _showAnalytics() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Analytics feature coming soon')),
+    );
+  }
+
+  void _showSuperAdminActions() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Super admin actions feature coming soon')),
+    );
+  }
+
+  void _showPartnerActions() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Partner actions feature coming soon')),
+    );
+  }
+
+  void _showPlatformManagement() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Platform management feature coming soon')),
+    );
+  }
+
+  void _showPartnerManagement() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Partner management feature coming soon')),
+    );
+  }
+
+  void _showSystemSettings() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('System settings feature coming soon')),
+    );
+  }
+
+  void _showClientManagement() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Client management feature coming soon')),
+    );
+  }
+
+  void _showBankingInterface() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Banking interface feature coming soon')),
+    );
+  }
+
+  void _showConfiguration() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Configuration feature coming soon')),
+    );
+  }
+
+  void _showBankAdminActions() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Bank admin actions feature coming soon')),
+    );
+  }
+
+  void _showBankOperationsActions() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Bank operations actions feature coming soon')),
     );
   }
 }

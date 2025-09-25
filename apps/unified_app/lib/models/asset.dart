@@ -1,4 +1,135 @@
 import 'asset_categories.dart';
+import 'user_role.dart';
+
+// Asset upload source tracking
+enum AssetSource {
+  superAdmin,
+  merchantAdmin,
+  professionalAgent,
+  individual,
+  platform,
+}
+
+extension AssetSourceExtension on AssetSource {
+  String get displayName {
+    switch (this) {
+      case AssetSource.superAdmin:
+        return 'Super Admin';
+      case AssetSource.merchantAdmin:
+        return 'Merchant Admin';
+      case AssetSource.professionalAgent:
+        return 'Professional Agent';
+      case AssetSource.individual:
+        return 'Individual Owner';
+      case AssetSource.platform:
+        return 'Platform';
+    }
+  }
+
+  String get colorCode {
+    switch (this) {
+      case AssetSource.superAdmin:
+        return '#FF5722'; // Red
+      case AssetSource.merchantAdmin:
+        return '#2196F3'; // Blue
+      case AssetSource.professionalAgent:
+        return '#4CAF50'; // Green
+      case AssetSource.individual:
+        return '#FF9800'; // Orange
+      case AssetSource.platform:
+        return '#9C27B0'; // Purple
+    }
+  }
+
+  UserRole get correspondingRole {
+    switch (this) {
+      case AssetSource.superAdmin:
+        return UserRole.superAdmin;
+      case AssetSource.merchantAdmin:
+        return UserRole.merchantAdmin;
+      case AssetSource.professionalAgent:
+        return UserRole.professionalAgent;
+      case AssetSource.individual:
+        return UserRole.investorAgent;
+      case AssetSource.platform:
+        return UserRole.superAdmin;
+    }
+  }
+}
+
+// Asset upload metadata
+class AssetUploadMetadata {
+  final AssetSource source;
+  final String uploaderId;
+  final String? uploaderName;
+  final String? uploaderEmail;
+  final String? merchantId;
+  final String? professionalLicenseNumber;
+  final DateTime uploadedAt;
+  final String? originalSource; // For bulk imports
+  final Map<String, dynamic>? customMetadata;
+  final List<String> verificationDocuments;
+  final bool requiresKYC;
+  final bool requiresProfessionalVerification;
+  final String? notes;
+
+  const AssetUploadMetadata({
+    required this.source,
+    required this.uploaderId,
+    this.uploaderName,
+    this.uploaderEmail,
+    this.merchantId,
+    this.professionalLicenseNumber,
+    required this.uploadedAt,
+    this.originalSource,
+    this.customMetadata,
+    this.verificationDocuments = const [],
+    this.requiresKYC = false,
+    this.requiresProfessionalVerification = false,
+    this.notes,
+  });
+
+  factory AssetUploadMetadata.fromJson(Map<String, dynamic> json) {
+    return AssetUploadMetadata(
+      source: AssetSource.values.firstWhere(
+        (s) => s.name == json['source'],
+        orElse: () => AssetSource.individual,
+      ),
+      uploaderId: json['uploaderId'] ?? '',
+      uploaderName: json['uploaderName'],
+      uploaderEmail: json['uploaderEmail'],
+      merchantId: json['merchantId'],
+      professionalLicenseNumber: json['professionalLicenseNumber'],
+      uploadedAt: DateTime.parse(json['uploadedAt']),
+      originalSource: json['originalSource'],
+      customMetadata: json['customMetadata'],
+      verificationDocuments: json['verificationDocuments'] != null
+          ? List<String>.from(json['verificationDocuments'])
+          : [],
+      requiresKYC: json['requiresKYC'] ?? false,
+      requiresProfessionalVerification: json['requiresProfessionalVerification'] ?? false,
+      notes: json['notes'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'source': source.name,
+      'uploaderId': uploaderId,
+      'uploaderName': uploaderName,
+      'uploaderEmail': uploaderEmail,
+      'merchantId': merchantId,
+      'professionalLicenseNumber': professionalLicenseNumber,
+      'uploadedAt': uploadedAt.toIso8601String(),
+      'originalSource': originalSource,
+      'customMetadata': customMetadata,
+      'verificationDocuments': verificationDocuments,
+      'requiresKYC': requiresKYC,
+      'requiresProfessionalVerification': requiresProfessionalVerification,
+      'notes': notes,
+    };
+  }
+}
 
 class AssetLocation {
   final double latitude;
@@ -30,6 +161,17 @@ class AssetLocation {
 
   String get fullAddress => '$address, $city, $state, $country';
   String get shortAddress => '$city, $state';
+
+  Map<String, dynamic> toJson() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      'address': address,
+      'city': city,
+      'state': state,
+      'country': country,
+    };
+  }
 }
 
 class Asset {
@@ -46,6 +188,10 @@ class Asset {
   final String? description;
   final AssetCategory? category;
   final AssetSubCategory? subCategory;
+  final AssetUploadMetadata? uploadMetadata;
+  final DateTime? lastModified;
+  final String? modifiedBy;
+  final int version;
 
   Asset({
     required this.id,
@@ -61,6 +207,10 @@ class Asset {
     this.description,
     this.category,
     this.subCategory,
+    this.uploadMetadata,
+    this.lastModified,
+    this.modifiedBy,
+    this.version = 1,
   });
 
   factory Asset.fromJson(Map<String, dynamic> json) {
@@ -83,6 +233,14 @@ class Asset {
       description: json['description'],
       subCategory: subCat,
       category: subCat?.category,
+      uploadMetadata: json['uploadMetadata'] != null
+          ? AssetUploadMetadata.fromJson(json['uploadMetadata'])
+          : null,
+      lastModified: json['lastModified'] != null
+          ? DateTime.parse(json['lastModified'])
+          : null,
+      modifiedBy: json['modifiedBy'],
+      version: json['version'] ?? 1,
     );
   }
 
@@ -603,6 +761,49 @@ class Asset {
       default:
         return 'business';
     }
+  }
+
+  // Source tracking helpers
+  bool get isInstitutional =>
+    uploadMetadata?.source == AssetSource.superAdmin ||
+    uploadMetadata?.source == AssetSource.merchantAdmin ||
+    uploadMetadata?.source == AssetSource.platform;
+
+  bool get isProfessionalManaged =>
+    uploadMetadata?.source == AssetSource.professionalAgent;
+
+  bool get isIndividualOwned =>
+    uploadMetadata?.source == AssetSource.individual;
+
+  String get sourceDisplayName =>
+    uploadMetadata?.source.displayName ?? 'Unknown';
+
+  String get sourceColorCode =>
+    uploadMetadata?.source.colorCode ?? '#9E9E9E';
+
+  bool get requiresEnhancedVerification =>
+    uploadMetadata?.requiresProfessionalVerification == true ||
+    uploadMetadata?.requiresKYC == true ||
+    !isInstitutional;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'type': type,
+      'title': title,
+      'spv_id': spvId,
+      'status': status,
+      'nav': nav,
+      'verification_required': verificationRequired,
+      'createdAt': createdAt.toIso8601String(),
+      'images': images,
+      'location': location?.toJson(),
+      'description': description,
+      'uploadMetadata': uploadMetadata?.toJson(),
+      'lastModified': lastModified?.toIso8601String(),
+      'modifiedBy': modifiedBy,
+      'version': version,
+    };
   }
 }
 

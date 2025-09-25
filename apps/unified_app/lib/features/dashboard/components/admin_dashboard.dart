@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../providers/admin_users_provider.dart';
+import '../../../providers/admin_stats_provider.dart';
+import '../../../providers/assets_provider.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   const AdminDashboard({super.key});
@@ -25,6 +28,13 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> with TickerProv
   void initState() {
     super.initState();
     _tabController = TabController(length: 9, vsync: this); // Added Insurance tab
+
+    // Load data using providers
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(adminStatsProvider.notifier).loadDashboardData();
+      ref.read(adminUsersProvider.notifier).loadUsers();
+      ref.read(assetsProvider.notifier).loadAssets();
+    });
   }
 
   @override

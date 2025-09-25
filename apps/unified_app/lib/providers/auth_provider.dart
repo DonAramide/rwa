@@ -185,32 +185,72 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _handleLoginSuccess(Map<String, dynamic> response, String email, UserRole? role) async {
     final token = response['token'] as String?;
-    
+
     if (token != null) {
       ApiClient.setAuthToken(token);
-      
-      // For demo purposes, set available roles based on the role selected or all roles for testing
-      List<UserRole> availableRoles = role != null 
-        ? [role] 
-        : UserRole.values; // In production, this would come from the API response
-      
+
+      // Extract user data and role from response
+      final user = response['user'] as Map<String, dynamic>?;
+      final userId = user?['id'] as String?;
+
+      // Map role from API response to UserRole enum
+      UserRole userRole;
+      List<UserRole> availableRoles;
+
+      if (role != null) {
+        // Role was passed explicitly (legacy support)
+        userRole = role;
+        availableRoles = [role];
+      } else if (user?['role'] != null) {
+        // Map string role from API response to enum
+        userRole = _mapStringToUserRole(user!['role'] as String);
+        availableRoles = [userRole];
+      } else {
+        // Default fallback
+        userRole = UserRole.investorAgent;
+        availableRoles = UserRole.values;
+      }
+
       final newState = state.copyWith(
         isLoading: false,
         isAuthenticated: true,
         token: token,
-        userId: null, // Will be extracted from token if needed
+        userId: userId,
         email: email,
-        userRole: role ?? UserRole.investorAgent, // Default to investor-agent
+        userRole: userRole,
         availableRoles: availableRoles,
         error: null,
       );
-      
+
       state = newState;
     } else {
       state = state.copyWith(
         isLoading: false,
         error: 'Invalid login response',
       );
+    }
+  }
+
+  UserRole _mapStringToUserRole(String roleString) {
+    switch (roleString.toLowerCase()) {
+      case 'investor':
+      case 'investor_agent':
+        return UserRole.investorAgent;
+      case 'professional_agent':
+      case 'agent':
+        return UserRole.professionalAgent;
+      case 'verifier':
+        return UserRole.verifier;
+      case 'admin':
+        return UserRole.admin;
+      case 'super_admin':
+      case 'superadmin':
+        return UserRole.superAdmin;
+      case 'bank_white_label':
+      case 'bankwhitelabel':
+        return UserRole.merchantWhiteLabel;
+      default:
+        return UserRole.investorAgent;
     }
   }
 }

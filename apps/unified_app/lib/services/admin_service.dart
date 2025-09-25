@@ -27,6 +27,7 @@ class AdminService {
   static Future<List<AdminUser>> getUsers({
     int limit = 20,
     int offset = 0,
+    Map<String, dynamic>? filters,
   }) async {
     // Mock data for now
     await Future.delayed(const Duration(milliseconds: 300));

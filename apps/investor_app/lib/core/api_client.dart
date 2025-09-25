@@ -157,6 +157,46 @@ class ApiClient {
     return _handleResponse(response);
   }
 
+  static Future<Map<String, dynamic>> createInvestment({
+    required String assetId,
+    required double amount,
+    String? verificationMethod,
+    String? agentId,
+  }) async {
+    final body = <String, dynamic>{
+      'assetId': assetId,
+      'amount': amount,
+    };
+
+    if (verificationMethod != null) {
+      body['verificationMethod'] = verificationMethod;
+    }
+
+    if (agentId != null) {
+      body['agentId'] = agentId;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/invest'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> getInvestmentHistory({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final queryParams = {
+      'limit': limit.toString(),
+      'offset': offset.toString(),
+    };
+    final uri = Uri.parse('$baseUrl/invest/history').replace(queryParameters: queryParams);
+    final response = await http.get(uri, headers: _headers);
+    return _handleResponse(response);
+  }
+
   // Marketplace endpoints
   static Future<Map<String, dynamic>> getOrderbook(String assetId) async {
     final response = await http.get(
@@ -267,6 +307,36 @@ class ApiClient {
   static Future<Map<String, dynamic>> getVerificationReport(String reportId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/verification/reports/$reportId'),
+      headers: _headers,
+    );
+    return _handleResponse(response);
+  }
+
+  // Notification endpoints
+  static Future<Map<String, dynamic>> getNotifications({
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final queryParams = {
+      'limit': limit.toString(),
+      'offset': offset.toString(),
+    };
+    final uri = Uri.parse('$baseUrl/notifications').replace(queryParameters: queryParams);
+    final response = await http.get(uri, headers: _headers);
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> markNotificationAsRead(String notificationId) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/notifications/$notificationId/read'),
+      headers: _headers,
+    );
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> markAllNotificationsAsRead() async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/notifications/read-all'),
       headers: _headers,
     );
     return _handleResponse(response);

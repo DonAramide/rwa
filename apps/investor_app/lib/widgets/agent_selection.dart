@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AgentSelectionDialog extends ConsumerStatefulWidget {
   final String assetId;
-  final VoidCallback onAgentSelected;
+  final Function(String agentId) onAgentSelected;
   final VoidCallback onCancel;
 
   const AgentSelectionDialog({
@@ -72,7 +72,7 @@ class _AgentSelectionDialogState extends ConsumerState<AgentSelectionDialog> {
         ),
         ElevatedButton(
           onPressed: _selectedAgentId != null ? () {
-            widget.onAgentSelected();
+            widget.onAgentSelected(_selectedAgentId!);
           } : null,
           child: const Text('Select Agent'),
         ),

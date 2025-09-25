@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'providers/auth_provider.dart';
+import 'providers/notifications_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/marketplace/marketplace_screen.dart';
 import 'screens/portfolio/portfolio_screen.dart';
+import 'screens/portfolio/investment_history_screen.dart';
 import 'screens/asset_detail/asset_detail_screen.dart';
+import 'screens/asset_detail/asset_telemetry_screen.dart';
+import 'screens/notifications/notifications_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: InvestorApp()));
@@ -22,7 +26,16 @@ class InvestorApp extends StatelessWidget {
         GoRoute(path: '/', builder: (ctx, st) => const HomeScreen()),
         GoRoute(path: '/market', builder: (ctx, st) => const MarketplaceScreen()),
         GoRoute(path: '/portfolio', builder: (ctx, st) => const PortfolioScreen()),
+        GoRoute(path: '/investment-history', builder: (ctx, st) => const InvestmentHistoryScreen()),
+        GoRoute(path: '/notifications', builder: (ctx, st) => const NotificationsScreen()),
         GoRoute(path: '/asset/:id', builder: (ctx, st) => AssetDetailScreen(id: st.pathParameters['id']!)),
+        GoRoute(
+          path: '/asset/:id/telemetry',
+          builder: (ctx, st) => AssetTelemetryScreen(
+            assetId: st.pathParameters['id']!,
+            assetTitle: st.uri.queryParameters['title'] ?? 'Asset',
+          ),
+        ),
       ],
     );
 
@@ -40,6 +53,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
     
     if (!authState.isAuthenticated) {
       return Scaffold(
@@ -70,6 +84,16 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          Badge(
+            isLabelVisible: unreadCount > 0,
+            label: Text(unreadCount.toString()),
+            child: IconButton(
+              onPressed: () {
+                context.push('/notifications');
+              },
+              icon: const Icon(Icons.notifications, color: Colors.grey),
+            ),
+          ),
           IconButton(
             onPressed: () {
               ref.read(authProvider.notifier).logout();

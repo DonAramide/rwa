@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
 import '../models/rofr_models.dart';
 import '../models/asset.dart';
+import '../services/rofr_notification_service.dart';
+import '../services/rofr_market_listing_service.dart';
 
 class RofrState {
   final List<RofrOffer> offers;
@@ -79,13 +81,22 @@ class RofrNotifier extends StateNotifier<RofrState> {
       // Submit to API
       await ApiClient.createRofrOffer(offer.toJson());
 
-      // Send notifications to all eligible shareholders
-      await _sendNotificationsToShareholders(offer);
+      // Send notifications to all eligible shareholders using the notification service
+      final notifications = await RofrNotificationService.sendInitialNotifications(
+        offer: offer,
+        shareholders: shareholders,
+      );
 
-      // Update local state
+      // Schedule reminder notifications
+      RofrNotificationService.scheduleReminders(offer);
+
+      // Update local state with new notifications
       final updatedOffers = [...state.offers, offer];
+      final updatedNotifications = [...state.notifications, ...notifications];
+
       state = state.copyWith(
         offers: updatedOffers,
+        notifications: updatedNotifications,
         isLoading: false,
       );
 
@@ -125,7 +136,18 @@ class RofrNotifier extends StateNotifier<RofrState> {
       // Submit response to API
       await ApiClient.submitRofrResponse(rofrResponse.toJson());
 
+      // Send response confirmation notification
+      final offer = state.offers.firstWhere((o) => o.id == offerId);
+      final confirmationNotification = await RofrNotificationService.sendResponseConfirmation(
+        response: rofrResponse,
+        offer: offer,
+      );
+
       // Update local state
+      final updatedNotifications = confirmationNotification != null
+          ? [...state.notifications, confirmationNotification]
+          : state.notifications;
+
       final updatedOffers = state.offers.map((offer) {
         if (offer.id == offerId) {
           final updatedResponses = [...offer.responses, rofrResponse];
@@ -151,6 +173,7 @@ class RofrNotifier extends StateNotifier<RofrState> {
 
       state = state.copyWith(
         offers: updatedOffers,
+        notifications: updatedNotifications,
         isLoading: false,
       );
 
@@ -276,42 +299,72 @@ class RofrNotifier extends StateNotifier<RofrState> {
 
   // Process expired offers (called periodically)
   Future<void> processExpiredOffers() async {
-    final now = DateTime.now();
-    final updatedOffers = state.offers.map((offer) {
-      if (offer.isExpired && offer.status == RofrStatus.pending) {
-        // Move to market listing
-        return RofrOffer(
-          id: offer.id,
-          assetId: offer.assetId,
-          assetTitle: offer.assetTitle,
-          sellerId: offer.sellerId,
-          sellerName: offer.sellerName,
-          sharesOffered: offer.sharesRemaining,
-          pricePerShare: offer.pricePerShare,
-          totalValue: offer.totalValue,
-          offerDate: offer.offerDate,
-          expiryDate: offer.expiryDate,
-          status: RofrStatus.expired,
-          eligibleShareholders: offer.eligibleShareholders,
-          responses: offer.responses,
-          notes: offer.notes,
-        );
-      }
-      return offer;
-    }).toList();
+    final expiredOffers = state.offers.where((offer) =>
+      offer.isExpired && offer.status == RofrStatus.pending
+    ).toList();
 
-    if (updatedOffers != state.offers) {
-      state = state.copyWith(offers: updatedOffers);
+    if (expiredOffers.isEmpty) return;
 
-      // Notify about expired offers that should go to market
-      final expiredOffers = updatedOffers
-          .where((o) => o.status == RofrStatus.expired && o.sharesRemaining > 0)
-          .toList();
+    try {
+      // Process expired offers using the market listing service
+      final marketListings = await RofrMarketListingService.processExpiredOffers(expiredOffers);
 
+      // Update offer statuses
+      final updatedOffers = state.offers.map((offer) {
+        if (expiredOffers.any((expired) => expired.id == offer.id)) {
+          return RofrOffer(
+            id: offer.id,
+            assetId: offer.assetId,
+            assetTitle: offer.assetTitle,
+            sellerId: offer.sellerId,
+            sellerName: offer.sellerName,
+            sharesOffered: offer.sharesOffered,
+            pricePerShare: offer.pricePerShare,
+            totalValue: offer.totalValue,
+            offerDate: offer.offerDate,
+            expiryDate: offer.expiryDate,
+            status: RofrStatus.expired,
+            eligibleShareholders: offer.eligibleShareholders,
+            responses: offer.responses,
+            notes: offer.notes,
+          );
+        }
+        return offer;
+      }).toList();
+
+      // Send expiry notifications for each expired offer
+      final allExpiryNotifications = <RofrNotification>[];
       for (final offer in expiredOffers) {
-        // List remaining shares on public market
-        await _listOnPublicMarket(offer);
+        // Find the seller info (would come from user service in real app)
+        final sellerInfo = ShareholderInfo(
+          userId: offer.sellerId,
+          email: '${offer.sellerName.toLowerCase().replaceAll(' ', '.')}@example.com',
+          name: offer.sellerName,
+          sharesOwned: offer.sharesOffered,
+          ownershipPercentage: 0, // Would be calculated from actual data
+          purchaseDate: DateTime.now().subtract(const Duration(days: 365)),
+        );
+
+        final expiryNotifications = await RofrNotificationService.sendExpiryNotifications(
+          offer: offer,
+          seller: sellerInfo,
+        );
+
+        allExpiryNotifications.addAll(expiryNotifications);
       }
+
+      state = state.copyWith(
+        offers: updatedOffers,
+        notifications: [...state.notifications, ...allExpiryNotifications],
+      );
+
+      // Log successful processing
+      if (marketListings.isNotEmpty) {
+        print('Successfully processed ${expiredOffers.length} expired ROFR offers, '
+              'created ${marketListings.length} market listings');
+      }
+    } catch (e) {
+      print('Error processing expired ROFR offers: $e');
     }
   }
 

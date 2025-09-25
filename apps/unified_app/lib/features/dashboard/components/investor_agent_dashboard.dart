@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/theme_service.dart';
+import '../../../widgets/recent_transactions_widget.dart';
 
 class InvestorAgentDashboard extends ConsumerWidget {
   const InvestorAgentDashboard({super.key});
@@ -15,36 +17,46 @@ class InvestorAgentDashboard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Welcome Section
-          _buildWelcomeSection(),
+          _buildWelcomeSection(context),
           const SizedBox(height: 24),
-          
+
           // Portfolio Overview
-          _buildPortfolioOverview(),
+          _buildPortfolioOverview(context),
           const SizedBox(height: 24),
-          
+
           // Investment Opportunities
           _buildInvestmentOpportunities(context),
           const SizedBox(height: 24),
-          
+
           // Agent Activities
-          _buildAgentActivities(),
+          _buildAgentActivities(context),
           const SizedBox(height: 24),
-          
+
+          // Recent Transactions
+          RecentTransactionsWidget(
+            compact: true,
+            limit: 5,
+            onViewAll: () {
+              // Navigate to full transactions screen or show dialog
+            },
+          ),
+          const SizedBox(height: 24),
+
           // Governance & Rewards
-          _buildGovernanceSection(),
+          _buildGovernanceSection(context),
         ],
       ),
     );
   }
 
-  Widget _buildWelcomeSection() {
+  Widget _buildWelcomeSection(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ThemeService.getCardBackground(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeService.getBorder(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -66,7 +78,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
               const SizedBox(width: 12),
               Text(
                 'Investor-Agent Dashboard',
-                style: AppTextStyles.heading2.copyWith(color: AppColors.textPrimary),
+                style: AppTextStyles.heading2.copyWith(color: ThemeService.getTextPrimary(context)),
               ),
             ],
           ),
@@ -74,7 +86,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
           Text(
             'Welcome back! You\'re now an active investor and agent in the RWA ecosystem.',
             style: AppTextStyles.body1.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: ThemeService.getTextSecondary(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -104,7 +116,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildPortfolioOverview() {
+  Widget _buildPortfolioOverview(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -117,6 +129,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
           children: [
             Expanded(
               child: _buildMetricCard(
+              context,
                 'Total Invested',
                 '\$125,000',
                 Icons.account_balance_wallet,
@@ -128,6 +141,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildMetricCard(
+              context,
                 'Active Projects',
                 '8',
                 Icons.business,
@@ -143,6 +157,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
           children: [
             Expanded(
               child: _buildMetricCard(
+              context,
                 'Monthly Return',
                 '\$3,200',
                 Icons.trending_up,
@@ -154,6 +169,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildMetricCard(
+              context,
                 'Agent Rewards',
                 '\$450',
                 Icons.stars,
@@ -169,6 +185,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
   }
 
   Widget _buildMetricCard(
+    BuildContext context,
     String title,
     String value,
     IconData icon,
@@ -179,9 +196,9 @@ class InvestorAgentDashboard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ThemeService.getCardBackground(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: ThemeService.getBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,9 +278,9 @@ class InvestorAgentDashboard extends ConsumerWidget {
                 margin: EdgeInsets.only(right: index == 2 ? 0 : 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: ThemeService.getCardBackground(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeService.getBorder(context)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,7 +372,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildAgentActivities() {
+  Widget _buildAgentActivities(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -367,9 +384,9 @@ class InvestorAgentDashboard extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ThemeService.getCardBackground(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: ThemeService.getBorder(context)),
           ),
           child: Column(
             children: [
@@ -454,7 +471,7 @@ class InvestorAgentDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildGovernanceSection() {
+  Widget _buildGovernanceSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -469,9 +486,9 @@ class InvestorAgentDashboard extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: ThemeService.getCardBackground(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeService.getBorder(context)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,9 +530,9 @@ class InvestorAgentDashboard extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: ThemeService.getCardBackground(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: ThemeService.getBorder(context)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

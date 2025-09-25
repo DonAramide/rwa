@@ -105,7 +105,89 @@ This document captures the end‑to‑end vision, architecture, workflows, compl
 - Revenue breakdown per investment project
 - Bank performance KPIs and metrics
 
-### 4. Core Platform Features
+### 4. 🏦 Bank Admin – Architecture & Workflow
+
+#### 1. User Roles
+
+**Super Admin (IIPS HQ)**
+- Creates a new Bank profile (white-label setup).
+- Assigns permissions, revenue model, and branding.
+- Provides initial login credentials to Bank Admin.
+
+**Bank Admin (Partner Bank)**
+- Manages investors, transactions, and compliance within that bank.
+- Customizes branding (logo, theme, product names).
+- Assigns roles to Bank Staff (compliance officers, customer support, finance team).
+
+**Bank Staff Users**
+- **Compliance Officer** – verifies KYC/AML.
+- **Finance Officer** – monitors transactions and payouts.
+- **Support Officer** – handles investor queries.
+
+#### 2. Bank Admin Features
+
+When a white-label account is created from Super Admin, the Bank Admin portal should automatically include:
+
+**🔹 Dashboard**
+- Total assets under management (AUM)
+- Investor count & activity
+- Pending approvals (KYC, investments, payouts)
+- Revenue earned by the bank
+
+**🔹 Investor Management**
+- Approve/reject investor onboarding requests (with KYC)
+- Monitor investments per asset/product
+- Track withdrawals, payouts, and returns
+
+**🔹 Transaction Management**
+- Real-time view of deposits & withdrawals (via bank API)
+- Automated reconciliation with bank's core system
+- Settlement logs for trustees
+
+**🔹 Compliance & Reporting**
+- Audit trail of all investor activities
+- Suspicious activity alerts (AML monitoring)
+- Export reports for regulators and trustees
+- Role-based access (segregation of duties)
+
+**🔹 Branding & Customization**
+- Bank's logo and theme applied automatically
+- Option to rename products (e.g., "WealthGrow" instead of "IIPS Investments")
+- Custom investor communications (emails/SMS under bank's brand)
+
+**🔹 Revenue & Profit Sharing**
+- Automatic calculation of the bank's commission %
+- Revenue breakdown (Bank / IIPS / Trustee / Partner)
+- Downloadable revenue reports
+
+#### 3. Super Admin → Bank Admin Workflow
+
+**1. Super Admin Creates Bank Account**
+- Fills details (Bank name, contact, revenue share %, trustee assignment).
+- Uploads branding (logo, color scheme).
+- Generates secure login credentials.
+
+**2. Bank Admin First Login**
+- Accepts Terms & MoU.
+- Customizes white-label (theme, product names).
+- Creates internal users (compliance, finance, support).
+
+**3. Activation**
+- Super Admin approves final setup.
+- Trustee is linked for that bank.
+- Bank Admin starts onboarding investors.
+
+#### 4. Developer Considerations
+
+**Multi-Tenancy** → Each bank sees only its own investors, assets, and revenue.
+
+**White-Label Branding Engine** → Super Admin portal must push brand assets (logos, themes) to each bank's subdomain (e.g., invest.[bankname].com).
+
+**APIs** → Strong integration layer to link bank accounts, trustees, and KYC providers.
+
+**Security** → Role-based access control (RBAC), MFA login, audit logging.
+
+### 5. Core Platform Features
 - **White-label branding** for each partner bank
 - **Multi-tenant architecture** with bank-specific data isolation
 - **Fractional ownership** via tokenization (restricted ERC‑20/1155 style)

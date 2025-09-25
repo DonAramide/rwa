@@ -45,6 +45,8 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                       _buildRoleCard(UserRole.verifier),
                       const SizedBox(height: 16),
                       _buildRoleCard(UserRole.admin),
+                      const SizedBox(height: 16),
+                      _buildRoleCard(UserRole.superAdmin),
                     ],
                   ),
                 ),
@@ -437,6 +439,18 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
       case UserRole.admin:
         context.push('/onboarding/admin');
         break;
+      case UserRole.superAdmin:
+        context.go('/super-admin'); // Navigate directly to Super Admin Dashboard
+        break;
+      case UserRole.merchantWhiteLabel:
+        context.push('/onboarding/admin'); // Bank white-label uses admin-style onboarding
+        break;
+      case UserRole.merchantAdmin:
+        context.push('/onboarding/admin'); // Bank admin uses admin-style onboarding
+        break;
+      case UserRole.merchantOperations:
+        context.push('/onboarding/admin'); // Bank operations uses admin-style onboarding
+        break;
     }
   }
 
@@ -549,6 +563,114 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
             'Performance-based bonuses',
             'Long-term incentive plans',
             'Platform success sharing'
+          ],
+        );
+
+      case UserRole.superAdmin:
+        return RoleInfo(
+          title: 'Super Administrator',
+          subtitle: 'Full platform administration & white-label management',
+          icon: Icons.shield,
+          color: AppColors.error,
+          badge: 'SUPER ADMIN',
+          badgeColor: AppColors.error,
+          registrationFee: 'INVITE ONLY',
+          requirements: 'Platform Leadership',
+          keyFeatures: ['Platform control', 'White-label management', 'Full access'],
+          capabilities: [
+            'Full platform administration and control',
+            'Manage white-label partner configurations',
+            'Override all platform decisions and settings',
+            'Access to all financial and operational data',
+            'System-wide compliance and security oversight',
+            'Partner onboarding and relationship management'
+          ],
+          earnings: [
+            'Platform ownership stakes',
+            'Strategic partnership revenue',
+            'Long-term equity participation',
+            'Performance-based leadership bonuses'
+          ],
+        );
+
+      case UserRole.merchantWhiteLabel:
+        return RoleInfo(
+          title: 'Bank Partner',
+          subtitle: 'White-label banking partner with custom branding',
+          icon: Icons.account_balance,
+          color: AppColors.primary,
+          badge: 'PARTNER',
+          badgeColor: AppColors.primary,
+          registrationFee: 'PARTNERSHIP',
+          requirements: 'Banking License',
+          keyFeatures: ['Custom branding', 'Partner dashboard', 'Client management'],
+          capabilities: [
+            'White-label platform access with custom branding',
+            'Manage bank clients and their RWA investments',
+            'Integrate with existing banking infrastructure',
+            'Compliance reporting and regulatory oversight',
+            'Custom fee structures and revenue sharing',
+            'Dedicated partner support and training'
+          ],
+          earnings: [
+            'Revenue sharing from client activities',
+            'Partnership fee structures',
+            'Cross-selling opportunities',
+            'Strategic banking integration benefits'
+          ],
+        );
+
+      case UserRole.merchantAdmin:
+        return RoleInfo(
+          title: 'Bank Admin',
+          subtitle: 'Bank administration and customer management',
+          icon: Icons.admin_panel_settings,
+          color: Colors.blue,
+          badge: 'ADMIN',
+          badgeColor: Colors.blue,
+          registrationFee: 'EMPLOYEE',
+          requirements: 'Bank Employment',
+          keyFeatures: ['Customer management', 'Asset oversight', 'Revenue tracking'],
+          capabilities: [
+            'Manage bank customer accounts and investments',
+            'Oversee asset proposals and approvals',
+            'Monitor transaction processing and settlements',
+            'Access comprehensive analytics and reporting',
+            'Configure bank profile and branding settings',
+            'Handle compliance and regulatory requirements'
+          ],
+          earnings: [
+            'Employee salary and benefits',
+            'Performance-based bonuses',
+            'Professional development opportunities',
+            'Bank revenue participation programs'
+          ],
+        );
+
+      case UserRole.merchantOperations:
+        return RoleInfo(
+          title: 'Bank Operations',
+          subtitle: 'Bank operations and transaction processing',
+          icon: Icons.business_center,
+          color: Colors.teal,
+          badge: 'OPS',
+          badgeColor: Colors.teal,
+          registrationFee: 'EMPLOYEE',
+          requirements: 'Operations Team',
+          keyFeatures: ['Transaction processing', 'Settlement management', 'Operational oversight'],
+          capabilities: [
+            'Process and verify financial transactions',
+            'Manage settlement processes and reconciliation',
+            'Monitor operational metrics and performance',
+            'Handle customer support and operations issues',
+            'Coordinate with compliance and risk management',
+            'Maintain operational documentation and procedures'
+          ],
+          earnings: [
+            'Operations team salary structure',
+            'Efficiency and accuracy bonuses',
+            'Cross-training opportunities',
+            'Operational excellence rewards'
           ],
         );
     }

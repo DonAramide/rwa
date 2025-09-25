@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/notifications_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_colors.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/role_selection_screen.dart';
 import 'features/auth/forgot_password_screen.dart';
@@ -16,12 +19,28 @@ import 'features/marketplace/marketplace_screen.dart';
 import 'features/portfolio/portfolio_screen.dart';
 import 'features/verification/verification_hub.dart';
 import 'features/admin/admin_panel.dart';
+import 'features/admin/api_key_management_screen.dart';
 import 'features/asset_detail/asset_detail_screen.dart';
 import 'features/rofr/rofr_screen.dart';
 import 'features/wallet/wallet_connect_screen.dart';
 import 'features/wallet/wallet_dashboard_screen.dart';
+import 'features/notifications/notifications_screen.dart';
+import 'features/asset_detail/asset_telemetry_screen.dart';
+import 'features/super_admin/super_admin_dashboard.dart';
+import 'features/rofr/rofr_screen.dart';
+import 'features/rofr/shareholder_directory.dart';
+import 'features/asset_upload/unified_asset_upload_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Configure system UI for better font rendering
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+    ),
+  );
+
   runApp(const ProviderScope(child: UnifiedRWAApp()));
 }
 
@@ -91,6 +110,10 @@ class UnifiedRWAApp extends ConsumerWidget {
           builder: (ctx, st) => const AdminPanel(),
         ),
         GoRoute(
+          path: '/admin/api-keys',
+          builder: (ctx, st) => const ApiKeyManagementScreen(),
+        ),
+        GoRoute(
           path: '/asset/:id',
           builder: (ctx, st) => AssetDetailScreen(id: st.pathParameters['id']!),
         ),
@@ -106,6 +129,36 @@ class UnifiedRWAApp extends ConsumerWidget {
           path: '/wallet/connect',
           builder: (ctx, st) => const WalletConnectScreen(),
         ),
+        GoRoute(
+          path: '/notifications',
+          builder: (ctx, st) => const NotificationsScreen(),
+        ),
+        GoRoute(
+          path: '/asset/:id/telemetry',
+          builder: (ctx, st) => AssetTelemetryScreen(
+            assetId: st.pathParameters['id']!,
+            assetTitle: st.uri.queryParameters['title'] ?? 'Asset',
+          ),
+        ),
+        GoRoute(
+          path: '/super-admin',
+          builder: (ctx, st) => const SuperAdminDashboard(),
+        ),
+        GoRoute(
+          path: '/rofr',
+          builder: (ctx, st) => const RofrScreen(),
+        ),
+        GoRoute(
+          path: '/shareholders/:assetId',
+          builder: (ctx, st) => ShareholderDirectoryScreen(
+            assetId: st.pathParameters['assetId']!,
+            assetTitle: st.uri.queryParameters['title'] ?? 'Asset',
+          ),
+        ),
+        GoRoute(
+          path: '/asset-upload',
+          builder: (ctx, st) => const UnifiedAssetUploadScreen(),
+        ),
       ],
     );
 
@@ -118,6 +171,7 @@ class UnifiedRWAApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeNotifier.themeMode,
       routerConfig: router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -128,6 +182,13 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+
+    // Initialize notifications provider when authenticated
+    if (authState.isAuthenticated) {
+      Future.microtask(() {
+        ref.read(notificationProvider.notifier).loadNotifications();
+      });
+    }
     
     if (!authState.isAuthenticated) {
       return Scaffold(
@@ -148,16 +209,63 @@ class HomeScreen extends ConsumerWidget {
       );
     }
     
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.getBackground(isDark),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'RWA Investor',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.getTextPrimary(isDark),
+          ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.getSurface(isDark),
         elevation: 0,
         actions: [
+          // Notification bell with badge
+          Consumer(
+            builder: (context, ref, child) {
+              final unreadCount = ref.watch(unreadNotificationCountProvider);
+              return Stack(
+                children: [
+                  IconButton(
+                    onPressed: () => context.go('/notifications'),
+                    icon: Icon(
+                      Icons.notifications,
+                      color: AppColors.getTextSecondary(isDark),
+                    ),
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : unreadCount.toString(),
+                          style: const TextStyle(
+                            color: AppColors.textOnPrimary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           IconButton(
             onPressed: () {
               final themeNotifier = ref.read(themeProvider.notifier);
@@ -183,7 +291,7 @@ class HomeScreen extends ConsumerWidget {
                         ? Icons.dark_mode
                         : Icons.brightness_auto;
               }(),
-              color: Colors.grey,
+              color: AppColors.getTextSecondary(isDark),
             ),
           ),
           IconButton(
@@ -191,7 +299,10 @@ class HomeScreen extends ConsumerWidget {
               ref.read(authProvider.notifier).logout();
               context.go('/login');
             },
-            icon: const Icon(Icons.logout, color: Colors.grey),
+            icon: Icon(
+              Icons.logout,
+              color: AppColors.getTextSecondary(isDark),
+            ),
           ),
         ],
       ),
@@ -206,14 +317,14 @@ class HomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.blue[600]!, Colors.blue[400]!],
+                  colors: [AppColors.primary, AppColors.primaryLight],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withValues(alpha: 0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -225,7 +336,7 @@ class HomeScreen extends ConsumerWidget {
                   Text(
                     'Welcome back!',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
+                      color: AppColors.textOnPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -233,14 +344,14 @@ class HomeScreen extends ConsumerWidget {
                   Text(
                     authState.email ?? 'Investor',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: AppColors.textOnPrimary.withValues(alpha: 0.9),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Ready to explore new investment opportunities?',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: AppColors.textOnPrimary.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -253,7 +364,7 @@ class HomeScreen extends ConsumerWidget {
               'Quick Actions',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: AppColors.getTextPrimary(isDark),
               ),
             ),
             const SizedBox(height: 16),
@@ -265,7 +376,7 @@ class HomeScreen extends ConsumerWidget {
                     title: 'Marketplace',
                     subtitle: 'Browse assets',
                     icon: Icons.store,
-                    color: Colors.green[600]!,
+                    color: AppColors.success,
                     onTap: () => context.go('/market'),
                   ),
                 ),
@@ -276,7 +387,7 @@ class HomeScreen extends ConsumerWidget {
                     title: 'Portfolio',
                     subtitle: 'View holdings',
                     icon: Icons.account_balance_wallet,
-                    color: Colors.orange[600]!,
+                    color: AppColors.warning,
                     onTap: () => context.go('/portfolio'),
                   ),
                 ),
@@ -291,7 +402,7 @@ class HomeScreen extends ConsumerWidget {
                     title: 'Wallet',
                     subtitle: 'Crypto payments',
                     icon: Icons.account_balance_wallet_outlined,
-                    color: Colors.purple[600]!,
+                    color: AppColors.portfolio,
                     onTap: () => context.go('/wallet'),
                   ),
                 ),
@@ -302,8 +413,34 @@ class HomeScreen extends ConsumerWidget {
                     title: 'Verification',
                     subtitle: 'Asset verification',
                     icon: Icons.verified,
-                    color: Colors.teal[600]!,
+                    color: AppColors.verified,
                     onTap: () => context.go('/verification'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    context: context,
+                    title: 'Upload Asset',
+                    subtitle: 'List new asset',
+                    icon: Icons.upload,
+                    color: AppColors.success,
+                    onTap: () => context.go('/asset-upload'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildActionCard(
+                    context: context,
+                    title: 'ROFR',
+                    subtitle: 'Share transactions',
+                    icon: Icons.gavel,
+                    color: AppColors.portfolio,
+                    onTap: () => context.go('/rofr'),
                   ),
                 ),
               ],
@@ -315,11 +452,11 @@ class HomeScreen extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.getSurface(isDark),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.1),
+                    color: AppColors.getShadow(isDark),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -330,7 +467,7 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.trending_up, color: Colors.blue[600]),
+                      Icon(Icons.trending_up, color: AppColors.primary),
                       const SizedBox(width: 8),
                       Text(
                         'Investment Highlights',
@@ -361,16 +498,18 @@ class HomeScreen extends ConsumerWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.getSurface(isDark),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.1),
+              color: AppColors.getShadow(isDark),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -398,7 +537,7 @@ class HomeScreen extends ConsumerWidget {
             Text(
               subtitle,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
+                color: AppColors.getTextSecondary(isDark),
               ),
             ),
           ],
@@ -408,27 +547,39 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildHighlightItem(String title, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
+    return Consumer(
+      builder: (context, ref, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: AppColors.getTextSecondary(isDark),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.getTextPrimary(isDark),
+                  ),
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  color: AppColors.getTextSecondary(isDark),
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

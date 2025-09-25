@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/flag.dart';
 import '../services/monitoring_service.dart';
-import '../../../core/providers/api_client_provider.dart';
+// import '../../../core/providers/api_client_provider.dart';
 
 final monitoringServiceProvider = Provider<MonitoringService>((ref) {
-  final apiClient = ref.watch(apiClientProvider);
-  return MonitoringService(apiClient);
+  // final apiClient = ref.watch(apiClientProvider);
+  return MonitoringService();
 });
 
 final flagsProvider = FutureProvider.family<FlagResponse, FlagFilters>((ref, filters) {

@@ -262,7 +262,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                     DropdownMenuItem(value: 'carbon', child: Text('Carbon Credits')),
                   ],
                       onChanged: (value) {
-                        ref.read(assetsProvider.notifier).setFilters(type: value);
+                        ref.read(assetsProvider.notifier).filterAssets(type: value);
                         ref.read(assetsProvider.notifier).loadAssets(refresh: true);
                       },
                     );
@@ -288,7 +288,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                     DropdownMenuItem(value: 'suspended', child: Text('Suspended')),
                   ],
                       onChanged: (value) {
-                        ref.read(assetsProvider.notifier).setFilters(status: value);
+                        ref.read(assetsProvider.notifier).filterAssets(status: value);
                         ref.read(assetsProvider.notifier).loadAssets(refresh: true);
                       },
                     );

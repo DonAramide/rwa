@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/assets_provider.dart';
+import '../providers/portfolio_provider.dart';
+import '../core/api_client.dart';
 import 'agent_selection.dart';
 
 class InvestmentForm extends ConsumerStatefulWidget {
@@ -29,6 +31,7 @@ class _InvestmentFormState extends ConsumerState<InvestmentForm> {
   bool _hasAcceptedTerms = false;
   bool _needsVerification = false;
   String? _selectedVerificationMethod;
+  String? _selectedAgentId;
 
   @override
   void initState() {
@@ -71,13 +74,19 @@ class _InvestmentFormState extends ConsumerState<InvestmentForm> {
     });
 
     try {
-      // TODO: Implement actual investment API call
-      // For now, simulate the investment process
-      await Future.delayed(const Duration(seconds: 2));
-      
+      final result = await ApiClient.createInvestment(
+        assetId: widget.asset.id,
+        amount: _investmentAmount,
+        verificationMethod: _selectedVerificationMethod,
+        agentId: _selectedAgentId,
+      );
+
+      // Refresh portfolio after successful investment
+      ref.read(portfolioProvider.notifier).refreshPortfolio();
+
       // Show success dialog
       if (mounted) {
-        _showSuccessDialog();
+        _showSuccessDialog(result);
       }
     } catch (e) {
       setState(() {
@@ -92,7 +101,7 @@ class _InvestmentFormState extends ConsumerState<InvestmentForm> {
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(Map<String, dynamic> result) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -358,7 +367,10 @@ class _InvestmentFormState extends ConsumerState<InvestmentForm> {
                       context: context,
                       builder: (context) => AgentSelectionDialog(
                         assetId: widget.asset.id,
-                        onAgentSelected: () {
+                        onAgentSelected: (agentId) {
+                          setState(() {
+                            _selectedAgentId = agentId;
+                          });
                           Navigator.of(context).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

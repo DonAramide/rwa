@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
@@ -10,6 +11,7 @@ class AppTheme {
         seedColor: AppColors.primary,
         brightness: Brightness.light,
       ),
+      textTheme: GoogleFonts.robotoTextTheme(),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textPrimary,
@@ -92,6 +94,7 @@ class AppTheme {
         seedColor: AppColors.primary,
         brightness: Brightness.dark,
       ),
+      textTheme: GoogleFonts.robotoTextTheme(ThemeData.dark().textTheme),
       scaffoldBackgroundColor: AppColors.darkBackground,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.darkSurface,

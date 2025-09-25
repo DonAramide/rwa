@@ -1,56 +1,56 @@
-import 'package:json_annotation/json_annotation.dart';
+// import 'package:json_annotation/json_annotation.dart';
 
-part 'flag.g.dart';
+// part 'flag.g.dart';
 
 enum FlagType {
-  @JsonValue('suspicious_activity')
+  
   suspiciousActivity,
-  @JsonValue('document_discrepancy')
+  
   documentDiscrepancy,
-  @JsonValue('financial_irregularity')
+  
   financialIrregularity,
-  @JsonValue('milestone_delay')
+  
   milestoneDelay,
-  @JsonValue('communication_issue')
+  
   communicationIssue,
-  @JsonValue('legal_concern')
+  
   legalConcern,
-  @JsonValue('other')
+  
   other,
 }
 
 enum FlagStatus {
-  @JsonValue('pending')
+  
   pending,
-  @JsonValue('under_review')
+  
   underReview,
-  @JsonValue('resolved')
+  
   resolved,
-  @JsonValue('dismissed')
+  
   dismissed,
-  @JsonValue('escalated')
+  
   escalated,
 }
 
 enum FlagSeverity {
-  @JsonValue('low')
+  
   low,
-  @JsonValue('medium')
+  
   medium,
-  @JsonValue('high')
+  
   high,
-  @JsonValue('critical')
+  
   critical,
 }
 
 enum VoteType {
-  @JsonValue('upvote')
+  
   upvote,
-  @JsonValue('downvote')
+  
   downvote,
 }
 
-@JsonSerializable()
+
 class Flag {
   final int id;
   final FlagType type;
@@ -59,23 +59,23 @@ class Flag {
   final String title;
   final String description;
   final Map<String, dynamic>? evidence;
-  @JsonKey(name: 'admin_notes')
+  
   final String? adminNotes;
-  @JsonKey(name: 'resolution_notes')
+  
   final String? resolutionNotes;
-  @JsonKey(name: 'is_anonymous')
+  
   final bool isAnonymous;
   final int upvotes;
   final int downvotes;
-  @JsonKey(name: 'asset_id')
+  
   final int assetId;
-  @JsonKey(name: 'flagger_id')
+  
   final int flaggerId;
-  @JsonKey(name: 'assigned_admin_id')
+  
   final int? assignedAdminId;
-  @JsonKey(name: 'created_at')
+  
   final DateTime createdAt;
-  @JsonKey(name: 'updated_at')
+  
   final DateTime updatedAt;
 
   const Flag({
@@ -98,8 +98,45 @@ class Flag {
     required this.updatedAt,
   });
 
-  factory Flag.fromJson(Map<String, dynamic> json) => _$FlagFromJson(json);
-  Map<String, dynamic> toJson() => _$FlagToJson(this);
+  factory Flag.fromJson(Map<String, dynamic> json) => Flag(
+    id: json['id'],
+    type: FlagType.values.firstWhere((e) => e.name == json['type']),
+    status: FlagStatus.values.firstWhere((e) => e.name == json['status']),
+    severity: FlagSeverity.values.firstWhere((e) => e.name == json['severity']),
+    title: json['title'],
+    description: json['description'],
+    evidence: json['evidence'],
+    adminNotes: json['admin_notes'],
+    resolutionNotes: json['resolution_notes'],
+    isAnonymous: json['is_anonymous'],
+    upvotes: json['upvotes'],
+    downvotes: json['downvotes'],
+    assetId: json['asset_id'],
+    flaggerId: json['flagger_id'],
+    assignedAdminId: json['assigned_admin_id'],
+    createdAt: DateTime.parse(json['created_at']),
+    updatedAt: DateTime.parse(json['updated_at']),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'type': type.name,
+    'status': status.name,
+    'severity': severity.name,
+    'title': title,
+    'description': description,
+    'evidence': evidence,
+    'admin_notes': adminNotes,
+    'resolution_notes': resolutionNotes,
+    'is_anonymous': isAnonymous,
+    'upvotes': upvotes,
+    'downvotes': downvotes,
+    'asset_id': assetId,
+    'flagger_id': flaggerId,
+    'assigned_admin_id': assignedAdminId,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+  };
 
   int get totalVotes => upvotes + downvotes;
 
@@ -153,16 +190,16 @@ class Flag {
   }
 }
 
-@JsonSerializable()
+
 class CreateFlagRequest {
-  @JsonKey(name: 'asset_id')
+  
   final int assetId;
   final FlagType type;
   final FlagSeverity severity;
   final String title;
   final String description;
   final Map<String, dynamic>? evidence;
-  @JsonKey(name: 'is_anonymous')
+  
   final bool isAnonymous;
 
   const CreateFlagRequest({
@@ -175,11 +212,28 @@ class CreateFlagRequest {
     this.isAnonymous = false,
   });
 
-  factory CreateFlagRequest.fromJson(Map<String, dynamic> json) => _$CreateFlagRequestFromJson(json);
-  Map<String, dynamic> toJson() => _$CreateFlagRequestToJson(this);
+  factory CreateFlagRequest.fromJson(Map<String, dynamic> json) => CreateFlagRequest(
+    assetId: json['asset_id'],
+    type: FlagType.values.firstWhere((e) => e.name == json['type']),
+    severity: FlagSeverity.values.firstWhere((e) => e.name == json['severity']),
+    title: json['title'],
+    description: json['description'],
+    evidence: json['evidence'],
+    isAnonymous: json['is_anonymous'] ?? false,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'asset_id': assetId,
+    'type': type.name,
+    'severity': severity.name,
+    'title': title,
+    'description': description,
+    'evidence': evidence,
+    'is_anonymous': isAnonymous,
+  };
 }
 
-@JsonSerializable()
+
 class FlagResponse {
   final List<Flag> flags;
   final int total;
@@ -189,23 +243,30 @@ class FlagResponse {
     required this.total,
   });
 
-  factory FlagResponse.fromJson(Map<String, dynamic> json) => _$FlagResponseFromJson(json);
-  Map<String, dynamic> toJson() => _$FlagResponseToJson(this);
+  factory FlagResponse.fromJson(Map<String, dynamic> json) => FlagResponse(
+    flags: (json['flags'] as List).map((e) => Flag.fromJson(e)).toList(),
+    total: json['total'],
+  );
+
+  Map<String, dynamic> toJson() => {
+    'flags': flags.map((e) => e.toJson()).toList(),
+    'total': total,
+  };
 }
 
-@JsonSerializable()
+
 class InvestorAgentStats {
-  @JsonKey(name: 'total_flags')
+  
   final int totalFlags;
-  @JsonKey(name: 'resolved_flags')
+  
   final int resolvedFlags;
-  @JsonKey(name: 'accuracy_rate')
+  
   final double accuracyRate;
-  @JsonKey(name: 'reputation_score')
+  
   final int reputationScore;
-  @JsonKey(name: 'total_upvotes')
+  
   final int totalUpvotes;
-  @JsonKey(name: 'total_downvotes')
+  
   final int totalDownvotes;
 
   const InvestorAgentStats({
@@ -217,6 +278,21 @@ class InvestorAgentStats {
     required this.totalDownvotes,
   });
 
-  factory InvestorAgentStats.fromJson(Map<String, dynamic> json) => _$InvestorAgentStatsFromJson(json);
-  Map<String, dynamic> toJson() => _$InvestorAgentStatsToJson(this);
+  factory InvestorAgentStats.fromJson(Map<String, dynamic> json) => InvestorAgentStats(
+    totalFlags: json['total_flags'],
+    resolvedFlags: json['resolved_flags'],
+    accuracyRate: json['accuracy_rate']?.toDouble() ?? 0.0,
+    reputationScore: json['reputation_score'],
+    totalUpvotes: json['total_upvotes'],
+    totalDownvotes: json['total_downvotes'],
+  );
+
+  Map<String, dynamic> toJson() => {
+    'total_flags': totalFlags,
+    'resolved_flags': resolvedFlags,
+    'accuracy_rate': accuracyRate,
+    'reputation_score': reputationScore,
+    'total_upvotes': totalUpvotes,
+    'total_downvotes': totalDownvotes,
+  };
 }
